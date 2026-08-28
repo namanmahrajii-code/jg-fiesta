@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rock On Cafe 🎸 | Delicious Food & Live Ordering</title>
+  <meta name="description" content="Rock On Cafe - Browse our mouth-watering menu, customize portions, and place your order in real-time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/customer.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="dark-theme">
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand" id="brand-logo" onclick="app.navigateTo('customer')">
+        <div class="brand-icon">🎸</div>
+        <div class="brand-text">
+          <span class="brand-title">ROCK ON CAFE</span>
+          <span class="brand-subtitle">Eats &amp; Beats</span>
+        </div>
+      </div>
+
+      <!-- Header Controls -->
+      <div class="header-actions">
+        <!-- Admin Quick Controls (Visible in Admin View) -->
+        <div class="admin-quick-controls hidden" id="admin-quick-controls">
+          <button class="sound-toggle-btn" id="sound-toggle-btn" title="Toggle Audio Chime on New Orders" onclick="soundManager.toggleSound()">
+            <span id="sound-icon">🔔</span>
+          </button>
+          <div class="admin-profile-pill">
+            <span class="admin-avatar">👤</span>
+            <span class="admin-user-name" id="admin-display-name">Admin</span>
+            <button class="logout-btn" onclick="adminModule.logout()" title="Logout">🚪</button>
+          </div>
+        </div>
+
+        <!-- Customer Quick Cart Badge in Header (Desktop / Tablet) -->
+        <button class="header-cart-btn" id="header-cart-btn" onclick="customerModule.openCartDrawer()">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-count" id="header-cart-count">0</span>
+          <span class="cart-total-preview" id="header-cart-total">₹0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Application Wrapper -->
+  <main class="main-content">
+
+    <!-- ======================================================== -->
+    <!-- 1. CUSTOMER ORDERING VIEW -->
+    <!-- ======================================================== -->
+    <section class="view-panel active" id="customer-view">
+      <!-- Hero Banner -->
+      <div class="customer-hero">
+        <div class="hero-content">
+          <div class="hero-badge-group">
+            <span class="hero-tag">🔥 Fresh &amp; Sizzling</span>
+            <span class="hero-tag" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">⏰ 07:00 AM TO 09:00 PM</span>
+          </div>
+          <h1 class="hero-title">Rock On Café — Eats &amp; Beats</h1>
+          <p class="hero-desc">Select your favorites, customize portions (Full / Half), and order straight to your table. For direct inquiries: <strong>WhatsApp: 9761665116</strong></p>
+          
+          <!-- Search & Dietary Filters -->
+          <div class="hero-controls">
+            <div class="search-box">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="menu-search-input" placeholder="Search delicious dishes, drinks, pizzas..." oninput="customerModule.handleSearch(this.value)">
+              <button class="clear-search-btn hidden" id="clear-search-btn" onclick="customerModule.clearSearch()">✕</button>
+            </div>
+
+            <div class="dietary-filter-pills">
+              <button class="filter-pill active" data-type="all" onclick="customerModule.setDietFilter('all')">All Items</button>
+              <button class="filter-pill veg-pill" data-type="veg" onclick="customerModule.setDietFilter('veg')">
+                <span class="diet-icon veg-icon"></span> Veg Only
+              </button>
+              <button class="filter-pill nonveg-pill" data-type="nonveg" onclick="customerModule.setDietFilter('nonveg')">
+                <span class="diet-icon nonveg-icon"></span> Non-Veg
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Horizontal Sticky Pill Bar -->
+      <div class="category-nav-wrapper" id="category-nav-wrapper">
+        <div class="category-nav-container" id="category-nav-pills">
+          <!-- Rendered via JS -->
+          <button class="cat-pill active" onclick="customerModule.selectCategory(null)">✨ All Categories</button>
+        </div>
+      </div>
+
+      <!-- Customer Menu Container -->
+      <div class="menu-container">
+        <!-- Live Real-Time Banner Alert (if items change) -->
+        <div class="sync-banner hidden" id="customer-sync-banner">
+          <span class="sync-icon">⚡</span>
+          <span class="sync-text">Menu updated in real-time</span>
+        </div>
+
+        <!-- Menu Section Render Target -->
+        <div class="menu-items-grid" id="menu-items-grid">
+          <!-- Populated dynamically via customer.js -->
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading Rock On Cafe's menu...</p>
+          </div>
+        </div>
+
+        <!-- Empty Results State -->
+        <div class="empty-state hidden" id="menu-empty-state">
+          <div class="empty-icon">🍽️</div>
+          <h3>No matching dishes found</h3>
+          <p>Try searching for something else or reset your filters.</p>
+          <button class="btn btn-secondary" onclick="customerModule.resetFilters()">Reset All Filters</button>
+        </div>
+      </div>
+
+      <!-- Floating Mobile Cart Bar -->
+      <div class="floating-cart-bar hidden" id="floating-cart-bar" onclick="customerModule.openCartDrawer()">
+        <div class="floating-cart-info">
+          <span class="floating-cart-icon">🛒</span>
+          <div class="floating-cart-details">
+            <span class="floating-cart-items" id="floating-cart-items-text">0 items</span>
+            <span class="floating-cart-total" id="floating-cart-total-text">₹0</span>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm floating-checkout-btn">
+          View Cart &amp; Order →
+        </button>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 2. CUSTOMER ORDER TRACKER VIEW -->
+    <!-- ======================================================== -->
+    <section class="view-panel" id="order-tracker-view">
+      <div class="tracker-container">
+        <div class="tracker-card">
+          <div class="tracker-header">
+            <div class="tracker-success-icon">🎉</div>
+            <h2>Order Placed Successfully!</h2>
+            <p class="tracker-subtitle">Your order has been sent to the kitchen at <strong>Rock On Cafe</strong>.</p>
+            <div class="order-id-badge">
+              <span class="label">Order ID:</span>
+              <span class="id-value" id="tracker-order-id">#ROC-...</span>
+              <button class="copy-btn" onclick="customerModule.copyOrderId()" title="Copy Order ID">📋</button>
+            </div>
+            <div class="tracker-table-badge" id="tracker-customer-info">
+              📍 Table 4
+            </div>
+          </div>
+
+          <!-- Real-Time Status Stepper -->
+          <div class="status-stepper-wrapper">
+            <div class="stepper-title">
+              <span>Live Kitchen Status</span>
+              <span class="live-pulse-badge">🔴 LIVE SYNC</span>
+            </div>
+            <div class="stepper" id="order-stepper">
+              <div class="step step-new" id="step-new">
+                <div class="step-circle">📝</div>
+                <div class="step-label">Received</div>
+                <div class="step-time" id="step-time-new">Just now</div>
+              </div>
+              <div class="step-line" id="line-1"></div>
+              <div class="step step-confirmed" id="step-confirmed">
+                <div class="step-circle">👍</div>
+                <div class="step-label">Confirmed</div>
+              </div>
+              <div class="step-line" id="line-2"></div>
+              <div class="step step-preparing" id="step-preparing">
+                <div class="step-circle">🍳</div>
+                <div class="step-label">Preparing</div>
+              </div>
+              <div class="step-line" id="line-3"></div>
+              <div class="step step-ready" id="step-ready">
+                <div class="step-circle">🔔</div>
+                <div class="step-label">Ready</div>
+              </div>
+              <div class="step-line" id="line-4"></div>
+              <div class="step step-completed" id="step-completed">
+                <div class="step-circle">✨</div>
+                <div class="step-label">Completed</div>
+              </div>
+            </div>
+
+            <!-- Cancelled Alert (if order is cancelled) -->
+            <div class="cancelled-banner hidden" id="order-cancelled-banner">
+              <span class="cancelled-icon">⚠️</span>
+              <div class="cancelled-text">
+                <strong>Order Cancelled</strong>
+                <p>This order was cancelled by the restaurant. Please talk to our staff or place a new order.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Itemized Order Summary -->
+          <div class="tracker-items-summary">
+            <h3>Items in this Order</h3>
+            <div class="tracker-items-list" id="tracker-items-list">
+              <!-- Rendered via JS -->
+            </div>
+            <div class="tracker-total-row">
+              <span>Grand Total</span>
+              <span class="tracker-grand-total" id="tracker-grand-total">₹0</span>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="tracker-actions">
+            <button class="btn btn-primary btn-block" onclick="customerModule.orderMore()">
+              ➕ Order More Food / Back to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 3. ADMIN PANEL VIEW -->
+    <!-- ======================================================== -->
+    <section class="view-panel" id="admin-view">
+      <!-- Admin Login Box (Shown when not authenticated) -->
+      <div class="admin-login-wrapper" id="admin-login-box">
+        <div class="login-card">
+          <div class="login-header">
+            <div class="login-icon">🔐</div>
+            <h2>Admin Portal</h2>
+            <p>Access Rock On Cafe's live kitchen &amp; menu control center</p>
+          </div>
+
+          <form id="admin-login-form" onsubmit="adminModule.handleLogin(event)">
+            <div class="form-group">
+              <label for="admin-username">Username</label>
+              <div class="input-with-icon">
+                <span class="input-icon">👤</span>
+                <input type="text" id="admin-username" required placeholder="admin" autocomplete="username">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="admin-password">Password</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔑</span>
+                <input type="password" id="admin-password" required placeholder="••••••••" autocomplete="current-password">
+              </div>
+            </div>
+
+            <div class="login-error-alert hidden" id="login-error-msg"></div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-submit-btn">
+              <span>Sign In to Dashboard</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Admin Authenticated Dashboard -->
+      <div class="admin-dashboard-wrapper hidden" id="admin-dashboard">
+        <!-- Top KPI Stats Row -->
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-new" id="kpi-card-new">
+            <div class="kpi-icon-wrap">🛎️</div>
+            <div class="kpi-data">
+              <span class="kpi-label">New Orders</span>
+              <h3 class="kpi-value" id="kpi-new-count">0</h3>
+            </div>
+            <div class="kpi-badge pulsing" id="kpi-new-pulse">Live</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-active">🍳</div>
+            <div class="kpi-data">
+              <span class="kpi-label">In Kitchen</span>
+              <h3 class="kpi-value" id="kpi-active-count">0</h3>
+            </div>
+            <span class="kpi-subtext">Confirmed + Prep + Ready</span>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-today">📊</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Today's Orders</span>
+              <h3 class="kpi-value" id="kpi-today-orders">0</h3>
+            </div>
+            <span class="kpi-subtext">Total volume</span>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-icon-wrap kpi-icon-sales">💰</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Today's Sales</span>
+              <h3 class="kpi-value" id="kpi-today-sales">₹0</h3>
+            </div>
+            <span class="kpi-subtext">Gross revenue</span>
+          </div>
+        </div>
+
+        <!-- Admin Sub-Navigation Tabs -->
+        <div class="admin-tabs-bar">
+          <div class="admin-nav-tabs">
+            <button class="admin-tab-btn active" id="tab-orders-btn" onclick="adminModule.switchAdminTab('orders')">
+              📦 Live Kitchen Orders
+              <span class="badge" id="admin-orders-tab-count">0</span>
+            </button>
+            <button class="admin-tab-btn" id="tab-menu-btn" onclick="adminModule.switchAdminTab('menu')">
+              🍔 Menu &amp; Availability
+            </button>
+            <button class="admin-tab-btn" id="tab-categories-btn" onclick="adminModule.switchAdminTab('categories')">
+              🏷️ Categories
+            </button>
+          </div>
+
+          <div class="admin-tab-actions">
+            <button class="btn btn-secondary btn-sm" onclick="adminModule.refreshData()">
+              🔄 Refresh
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin TAB 1: Live Kitchen Orders -->
+        <div class="admin-tab-content active" id="admin-tab-orders">
+          <!-- Orders Filter Header -->
+          <div class="orders-filter-bar">
+            <div class="status-filter-pills">
+              <button class="order-filter-pill active" data-status="all" onclick="adminModule.filterOrders('all')">
+                All Orders (<span id="count-all">0</span>)
+              </button>
+              <button class="order-filter-pill pill-new" data-status="new" onclick="adminModule.filterOrders('new')">
+                New (<span id="count-new">0</span>)
+              </button>
+              <button class="order-filter-pill pill-confirmed" data-status="confirmed" onclick="adminModule.filterOrders('confirmed')">
+                Confirmed (<span id="count-confirmed">0</span>)
+              </button>
+              <button class="order-filter-pill pill-preparing" data-status="preparing" onclick="adminModule.filterOrders('preparing')">
+                Preparing (<span id="count-preparing">0</span>)
+              </button>
+              <button class="order-filter-pill pill-ready" data-status="ready" onclick="adminModule.filterOrders('ready')">
+                Ready (<span id="count-ready">0</span>)
+              </button>
+              <button class="order-filter-pill pill-completed" data-status="completed" onclick="adminModule.filterOrders('completed')">
+                Completed (<span id="count-completed">0</span>)
+              </button>
+              <button class="order-filter-pill pill-cancelled" data-status="cancelled" onclick="adminModule.filterOrders('cancelled')">
+                Cancelled (<span id="count-cancelled">0</span>)
+              </button>
+            </div>
+
+            <div class="orders-search-wrap">
+              <input type="text" id="admin-orders-search" placeholder="Search Order ID, Table, Customer..." oninput="adminModule.searchOrders(this.value)">
+            </div>
+          </div>
+
+          <!-- Real-Time Incoming Order Flash Notification -->
+          <div class="new-order-alert-banner hidden" id="new-order-alert-banner">
+            <div class="alert-content">
+              <span class="alert-bell">🔔</span>
+              <div>
+                <strong>New Incoming Order Received!</strong>
+                <span id="new-order-alert-text">Table 4 just placed an order</span>
+              </div>
+            </div>
+            <button class="btn btn-sm btn-light" onclick="adminModule.dismissNewOrderAlert()">View Order</button>
+          </div>
+
+          <!-- Orders Feed Grid -->
+          <div class="orders-cards-grid" id="admin-orders-grid">
+            <div class="loading-state">
+              <div class="spinner"></div>
+              <p>Fetching real-time orders...</p>
+            </div>
+          </div>
+
+          <!-- Empty Orders State -->
+          <div class="empty-state hidden" id="admin-orders-empty">
+            <div class="empty-icon">📦</div>
+            <h3>No orders found in this view</h3>
+            <p>New orders placed by customers will appear here in real time.</p>
+          </div>
+        </div>
+
+        <!-- Admin TAB 2: Menu Management & Instant Availability -->
+        <div class="admin-tab-content" id="admin-tab-menu">
+          <div class="menu-management-header">
+            <div class="menu-header-info">
+              <h2>Menu Items &amp; Availability</h2>
+              <p>Toggle food availability in real-time, edit dishes, and adjust prices.</p>
+            </div>
+            <button class="btn btn-primary" onclick="adminModule.openAddDishModal()">
+              ➕ Add New Dish
+            </button>
+          </div>
+
+          <!-- Filters Row -->
+          <div class="menu-mgmt-filter-bar">
+            <div class="select-wrapper">
+              <select id="admin-menu-cat-filter" onchange="adminModule.filterAdminMenu()">
+                <option value="all">All Categories</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div class="search-box">
+              <input type="text" id="admin-menu-search" placeholder="Search food items..." oninput="adminModule.filterAdminMenu()">
+            </div>
+          </div>
+
+          <!-- Menu Items Table / Grid -->
+          <div class="admin-menu-table-wrapper">
+            <table class="admin-table" id="admin-menu-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Image</th>
+                  <th>Item Details</th>
+                  <th>Category</th>
+                  <th>Diet</th>
+                  <th>Full Price</th>
+                  <th>Half Price</th>
+                  <th style="text-align: center;">Availability</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-menu-tbody">
+                <!-- Populated via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Admin TAB 3: Category Management -->
+        <div class="admin-tab-content" id="admin-tab-categories">
+          <div class="menu-management-header">
+            <div class="menu-header-info">
+              <h2>Category Management</h2>
+              <p>Organize your restaurant menu categories and their display hierarchy.</p>
+            </div>
+            <button class="btn btn-primary" onclick="adminModule.openAddCategoryModal()">
+              ➕ Add Category
+            </button>
+          </div>
+
+          <div class="admin-categories-list" id="admin-categories-list">
+            <!-- Populated via admin.js -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODALS & DRAWERS -->
+  <!-- ======================================================== -->
+
+  <!-- 1. Customer Cart Drawer / Modal -->
+  <div class="modal-backdrop hidden" id="cart-drawer-backdrop" onclick="customerModule.closeCartDrawer(event)">
+    <div class="cart-drawer" onclick="event.stopPropagation()">
+      <div class="drawer-header">
+        <div class="drawer-title-wrap">
+          <span class="drawer-icon">🛒</span>
+          <h3>Your Order Cart</h3>
+        </div>
+        <button class="close-drawer-btn" onclick="customerModule.closeCartDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Cart Items List -->
+        <div class="cart-items-container" id="cart-items-container">
+          <!-- Populated via customer.js -->
+        </div>
+
+        <!-- Empty Cart View in Drawer -->
+        <div class="cart-empty-view hidden" id="cart-empty-view">
+          <div class="cart-empty-icon">🍽️</div>
+          <h4>Your cart is empty</h4>
+          <p>Add some delicious dishes from our menu to place an order.</p>
+          <button class="btn btn-secondary btn-sm" onclick="customerModule.closeCartDrawer()">Browse Menu</button>
+        </div>
+
+        <!-- Order Information Section (When cart has items) -->
+        <div class="cart-checkout-section" id="cart-checkout-section">
+          <!-- Customer Identifier Input (Table number or Customer name) -->
+          <div class="form-group">
+            <label class="section-label">
+              <span>📍 Table Number or Name</span>
+              <span class="required">*Required</span>
+            </label>
+
+            <!-- Quick Table Selector Chips -->
+            <div class="quick-table-chips">
+              <button type="button" class="table-chip" onclick="customerModule.setIdentifier('Table 1')">Table 1</button>
+              <button type="button" class="table-chip" onclick="customerModule.setIdentifier('Table 2')">Table 2</button>
+              <button type="button" class="table-chip" onclick="customerModule.setIdentifier('Table 3')">Table 3</button>
+              <button type="button" class="table-chip" onclick="customerModule.setIdentifier('Table 4')">Table 4</button>
+              <button type="button" class="table-chip" onclick="customerModule.setIdentifier('Table 5')">Table 5</button>
+              <button type="button" class="table-chip" onclick="customerModule.setIdentifier('Table 6')">Table 6</button>
+            </div>
+
+            <div class="input-with-icon">
+              <span class="input-icon">🏷️</span>
+              <input type="text" id="order-customer-identifier" placeholder="e.g. Table 4 or John Doe" required autocomplete="off">
+            </div>
+          </div>
+
+          <!-- Special Kitchen Instructions / Notes -->
+          <div class="form-group">
+            <label class="section-label" for="order-special-notes">
+              <span>📝 Kitchen Notes (Optional)</span>
+            </label>
+            <textarea id="order-special-notes" rows="2" placeholder="e.g. Less spicy, extra dip, no onions..."></textarea>
+          </div>
+
+          <!-- Bill Breakdown -->
+          <div class="cart-bill-breakdown">
+            <div class="bill-row">
+              <span>Items Total</span>
+              <span id="cart-subtotal-amount">₹0</span>
+            </div>
+            <div class="bill-row grand-total-row">
+              <span>Grand Total</span>
+              <span class="grand-total-val" id="cart-grand-total-amount">₹0</span>
+            </div>
+          </div>
+
+          <!-- Order Error Feedback -->
+          <div class="order-error-banner hidden" id="order-error-banner"></div>
+
+          <!-- Place Order Button (With anti-duplicate debounce) -->
+          <button class="btn btn-primary btn-block btn-lg place-order-btn" id="place-order-btn" onclick="customerModule.submitOrder()">
+            <span class="btn-text">🚀 Send Order to Kitchen</span>
+            <div class="spinner btn-spinner hidden" id="place-order-spinner"></div>
+          </button>
+          <div class="anti-duplicate-hint">Orders are instantly synchronized with kitchen staff</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Portion Picker Modal (When adding items with Full/Half portions) -->
+  <div class="modal-backdrop hidden" id="portion-modal-backdrop" onclick="customerModule.closePortionModal(event)">
+    <div class="modal-card modal-sm" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="portion-modal-title">Select Portion</h3>
+        <button class="modal-close-btn" onclick="customerModule.closePortionModal()">✕</button>
+      </div>
+      <div class="modal-body" id="portion-modal-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Admin Add/Edit Food Item Modal -->
+  <div class="modal-backdrop hidden" id="dish-modal-backdrop" onclick="adminModule.closeDishModal(event)">
+    <div class="modal-card modal-md" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="dish-modal-title">Add Food Item</h3>
+        <button class="modal-close-btn" onclick="adminModule.closeDishModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="dish-form" onsubmit="adminModule.saveDish(event)">
+          <input type="hidden" id="dish-edit-id">
+
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label for="dish-name">Dish Name *</label>
+              <input type="text" id="dish-name" required placeholder="e.g. Rockstar Cheesy Burger">
+            </div>
+            <div class="form-group flex-1">
+              <label for="dish-category">Category *</label>
+              <select id="dish-category" required>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="dish-desc">Short Description</label>
+            <textarea id="dish-desc" rows="2" placeholder="Brief delicious summary of ingredients and taste..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Dietary Type *</label>
+              <div class="radio-toggle-group">
+                <label class="radio-pill">
+                  <input type="radio" name="dish-veg" value="1" id="dish-veg-1" checked>
+                  <span class="diet-icon veg-icon"></span> Veg
+                </label>
+                <label class="radio-pill">
+                  <input type="radio" name="dish-veg" value="0" id="dish-veg-0">
+                  <span class="diet-icon nonveg-icon"></span> Non-Veg
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label for="dish-full-price">Full Price (₹) *</label>
+              <input type="number" id="dish-full-price" required step="0.5" min="1" placeholder="250">
+            </div>
+          </div>
+
+          <!-- Half Price Enable/Disable -->
+          <div class="half-price-section">
+            <label class="checkbox-label">
+              <input type="checkbox" id="dish-has-half" onchange="adminModule.toggleHalfPriceInput(this.checked)">
+              <span>Enable Half Portion Option</span>
+            </label>
+
+            <div class="form-group hidden" id="dish-half-price-wrap" style="margin-top: 10px;">
+              <label for="dish-half-price">Half Price (₹) *</label>
+              <input type="number" id="dish-half-price" step="0.5" min="1" placeholder="140">
+            </div>
+          </div>
+
+          <!-- Food Image Selection: URL or Upload -->
+          <div class="form-group" style="margin-top: 15px;">
+            <label>Food Image</label>
+            <div class="image-input-tabs">
+              <button type="button" class="img-tab-btn active" id="img-tab-url-btn" onclick="adminModule.switchImgInputMode('url')">Image URL</button>
+              <button type="button" class="img-tab-btn" id="img-tab-file-btn" onclick="adminModule.switchImgInputMode('file')">Upload File</button>
+            </div>
+
+            <div id="img-url-input-wrap">
+              <input type="url" id="dish-image-url" placeholder="https://images.unsplash.com/..." oninput="adminModule.previewDishImage(this.value)">
+            </div>
+
+            <div id="img-file-input-wrap" class="hidden">
+              <input type="file" id="dish-image-file" accept="image/*" onchange="adminModule.handleImageFileUpload(event)">
+              <span class="helper-text">Max 5MB (JPG, PNG, WebP)</span>
+            </div>
+
+            <!-- Image Preview Box -->
+            <div class="dish-img-preview-box" id="dish-img-preview-box">
+              <img src="" alt="Preview" id="dish-img-preview" class="hidden">
+              <span id="dish-img-preview-placeholder">No image selected</span>
+            </div>
+          </div>
+
+          <!-- Initial Availability Toggle -->
+          <div class="form-group" style="margin-top: 15px;">
+            <label class="checkbox-label">
+              <input type="checkbox" id="dish-is-available" checked>
+              <span>Item is Available immediately</span>
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="adminModule.closeDishModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-dish-btn">Save Dish</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Admin Category Modal -->
+  <div class="modal-backdrop hidden" id="category-modal-backdrop" onclick="adminModule.closeCategoryModal(event)">
+    <div class="modal-card modal-sm" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="category-modal-title">Add Category</h3>
+        <button class="modal-close-btn" onclick="adminModule.closeCategoryModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="category-form" onsubmit="adminModule.saveCategory(event)">
+          <input type="hidden" id="category-edit-id">
+
+          <div class="form-group">
+            <label for="category-name">Category Name *</label>
+            <input type="text" id="category-name" required placeholder="e.g. Sizzlers & Platters">
+          </div>
+
+          <div class="form-group">
+            <label for="category-order">Display Order Number</label>
+            <input type="number" id="category-order" value="1" min="0">
+            <span class="helper-text">Lower numbers appear first in the customer menu.</span>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="adminModule.closeCategoryModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-category-btn">Save Category</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Firebase App, Analytics & Realtime Database SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="/js/firebase-config.js"></script>
+
+  <!-- JavaScript Libraries & Modules -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/sound.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/socket.js"></script>
+  <script src="/js/customer.js"></script>
+  <script src="/js/admin.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
