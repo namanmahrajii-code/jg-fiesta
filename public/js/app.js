@@ -50,6 +50,9 @@ const app = {
       }
     }
 
+    // Toggle admin-mode on body for CSS control
+    document.body.classList.toggle('admin-mode', viewName === 'admin');
+
     // Toggle View Panels
     document.querySelectorAll('.view-panel').forEach(panel => {
       panel.classList.remove('active');

@@ -241,9 +241,13 @@ body {
 }
 
 .admin-quick-controls {
-  display: flex;
+  display: none !important;
   align-items: center;
   gap: 10px;
+}
+
+body.admin-mode .admin-quick-controls {
+  display: flex !important;
 }
 
 .sound-toggle-btn {
