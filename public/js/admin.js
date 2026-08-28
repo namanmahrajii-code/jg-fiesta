@@ -91,7 +91,7 @@ const adminModule = {
     if (isAuth) {
       if (loginBox) loginBox.classList.add('hidden');
       if (dashboard) dashboard.classList.remove('hidden');
-      if (quickControls) quickControls.classList.remove('hidden');
+      if (quickControls) quickControls.classList.toggle('hidden', window.app && window.app.currentView !== 'admin');
       if (displayName) displayName.textContent = this.currentUser ? this.currentUser.username : 'Admin';
     } else {
       if (loginBox) loginBox.classList.remove('hidden');

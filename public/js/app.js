@@ -67,6 +67,12 @@ const app = {
     if (adminBtn) adminBtn.classList.toggle('active', viewName === 'admin');
     if (headerCartBtn) headerCartBtn.classList.toggle('hidden', viewName === 'admin');
 
+    // Admin quick controls must ONLY be visible when viewing Admin panel
+    const adminQuickControls = document.getElementById('admin-quick-controls');
+    if (adminQuickControls) {
+      adminQuickControls.classList.toggle('hidden', viewName !== 'admin' || !window.adminModule || !window.adminModule.isAuthenticated);
+    }
+
     // Clean professional separation: hide switcher tabs
     const viewTabs = document.querySelector('.view-tabs');
     if (viewTabs) {
